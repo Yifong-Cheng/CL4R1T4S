@@ -1,0 +1,36 @@
+name: Sync upstream (rebase)
+
+# Keep this fork in sync with elder-plinius/CL4R1T4S by rebasing onto upstream.
+on:
+  schedule:
+    - cron: '0 3 * * *'   # daily at 03:00 UTC
+  workflow_dispatch:        # allow manual runs from the Actions tab
+
+permissions:
+  contents: write           # needed to push the rebased branch
+
+jobs:
+  rebase-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history is required for rebase
+          ref: main
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/elder-plinius/CL4R1T4S.git
+          git fetch upstream
+
+      - name: Rebase onto upstream/main
+        run: git rebase upstream/main
+
+      - name: Push to fork
+        run: git push --force-with-lease origin main
